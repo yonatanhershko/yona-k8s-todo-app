@@ -12,7 +12,7 @@ A full-stack Todo application demonstrating containerization with Docker, orches
 
 ## Project Structure
 
-```
+``
 k8s-todo-app/
 ├── backend/
 │   ├── server.js
@@ -29,7 +29,7 @@ k8s-todo-app/
 │   ├── backend-deployment.yaml
 │   └── frontend-deployment.yaml
 └── docker-compose.yml
-```
+``
 
 ## Local Development
 
