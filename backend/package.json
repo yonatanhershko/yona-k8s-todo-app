@@ -17,8 +17,7 @@
   "dependencies": {
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "better-sqlite3": "^9.2.2"
+    "express": "^4.18.2"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.7.10",

@@ -1,7 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const Database = require("better-sqlite3");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -9,35 +10,45 @@ const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(bodyParser.json());
 
-// SQLite database (free, persistent, no external service needed)
-const db = new Database("todos.db");
+// JSON file storage
+const DB_FILE = path.join(__dirname, "todos.json");
 
-// Initialize database table
+// Initialize database file
 const initDatabase = () => {
     try {
-        db.exec(`
-      CREATE TABLE IF NOT EXISTS todos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        text TEXT NOT NULL,
-        completed INTEGER DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-        // Add sample data if table is empty
-        const count = db.prepare("SELECT COUNT(*) as count FROM todos").get();
-        if (count.count === 0) {
-            const insert = db.prepare(
-                "INSERT INTO todos (text, completed) VALUES (?, ?)"
-            );
-            insert.run("Learn Kubernetes", 0);
-            insert.run("Deploy to Fly.io", 0);
-            insert.run("Share on LinkedIn", 0);
-            console.log("Sample todos added to database");
+        if (!fs.existsSync(DB_FILE)) {
+            const initialData = [
+                { id: 1, text: "Learn Kubernetes", completed: false },
+                { id: 2, text: "Deploy to Fly.io", completed: false },
+                { id: 3, text: "Share on LinkedIn", completed: false },
+            ];
+            fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
+            console.log("Database initialized with sample todos");
+        } else {
+            console.log("Database file found");
         }
-        console.log("Database initialized successfully");
     } catch (err) {
         console.error("Database initialization error:", err);
+    }
+};
+
+// Read todos from file
+const readTodos = () => {
+    try {
+        const data = fs.readFileSync(DB_FILE, "utf8");
+        return JSON.parse(data);
+    } catch (err) {
+        console.error("Error reading todos:", err);
+        return [];
+    }
+};
+
+// Write todos to file
+const writeTodos = (todos) => {
+    try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(todos, null, 2));
+    } catch (err) {
+        console.error("Error writing todos:", err);
     }
 };
 
@@ -49,13 +60,8 @@ app.get("/health", (req, res) => {
 
 app.get("/api/todos", (req, res) => {
     try {
-        const todos = db.prepare("SELECT * FROM todos ORDER BY id ASC").all();
-        // Convert completed from 0/1 to false/true for consistency
-        const formattedTodos = todos.map((todo) => ({
-            ...todo,
-            completed: Boolean(todo.completed),
-        }));
-        res.json(formattedTodos);
+        const todos = readTodos();
+        res.json(todos);
     } catch (err) {
         console.error("Error fetching todos:", err);
         res.status(500).json({ error: "Failed to fetch todos" });
@@ -68,17 +74,15 @@ app.post("/api/todos", (req, res) => {
         return res.status(400).json({ error: "Text is required" });
     }
     try {
-        const stmt = db.prepare(
-            "INSERT INTO todos (text, completed) VALUES (?, ?)"
-        );
-        const result = stmt.run(text, 0);
-        const newTodo = db
-            .prepare("SELECT * FROM todos WHERE id = ?")
-            .get(result.lastInsertRowid);
-        res.status(201).json({
-            ...newTodo,
-            completed: Boolean(newTodo.completed),
-        });
+        const todos = readTodos();
+        const newTodo = {
+            id: Date.now(),
+            text,
+            completed: false,
+        };
+        todos.push(newTodo);
+        writeTodos(todos);
+        res.status(201).json(newTodo);
     } catch (err) {
         console.error("Error creating todo:", err);
         res.status(500).json({ error: "Failed to create todo" });
@@ -90,40 +94,18 @@ app.put("/api/todos/:id", (req, res) => {
     const { completed, text } = req.body;
 
     try {
-        // Build dynamic update query
-        const updates = [];
-        const values = [];
+        const todos = readTodos();
+        const todo = todos.find((t) => t.id === parseInt(id));
 
-        if (completed !== undefined) {
-            updates.push("completed = ?");
-            values.push(completed ? 1 : 0);
-        }
-        if (text !== undefined) {
-            updates.push("text = ?");
-            values.push(text);
-        }
-
-        if (updates.length === 0) {
-            return res.status(400).json({ error: "No fields to update" });
-        }
-
-        values.push(id);
-        const query = `UPDATE todos SET ${updates.join(", ")} WHERE id = ?`;
-
-        const stmt = db.prepare(query);
-        const result = stmt.run(...values);
-
-        if (result.changes === 0) {
+        if (!todo) {
             return res.status(404).json({ error: "Todo not found" });
         }
 
-        const updatedTodo = db
-            .prepare("SELECT * FROM todos WHERE id = ?")
-            .get(id);
-        res.json({
-            ...updatedTodo,
-            completed: Boolean(updatedTodo.completed),
-        });
+        if (completed !== undefined) todo.completed = completed;
+        if (text !== undefined) todo.text = text;
+
+        writeTodos(todos);
+        res.json(todo);
     } catch (err) {
         console.error("Error updating todo:", err);
         res.status(500).json({ error: "Failed to update todo" });
@@ -134,13 +116,15 @@ app.delete("/api/todos/:id", (req, res) => {
     const { id } = req.params;
 
     try {
-        const stmt = db.prepare("DELETE FROM todos WHERE id = ?");
-        const result = stmt.run(id);
+        const todos = readTodos();
+        const index = todos.findIndex((t) => t.id === parseInt(id));
 
-        if (result.changes === 0) {
+        if (index === -1) {
             return res.status(404).json({ error: "Todo not found" });
         }
 
+        todos.splice(index, 1);
+        writeTodos(todos);
         res.status(204).send();
     } catch (err) {
         console.error("Error deleting todo:", err);
