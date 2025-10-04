@@ -18,9 +18,9 @@ const initDatabase = () => {
     try {
         if (!fs.existsSync(DB_FILE)) {
             const initialData = [
-                { id: 1, text: "Learn Kubernetes", completed: false },
+                { id: 1, text: "Create Kubernetes", completed: false },
                 { id: 2, text: "Deploy to Fly.io", completed: false },
-                { id: 3, text: "Share on LinkedIn", completed: false },
+                { id: 3, text: "Convince Kubernetes to make me coffee", completed: true },
             ];
             fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
             console.log("Database initialized with sample todos");
