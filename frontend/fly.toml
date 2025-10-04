@@ -1,20 +1,22 @@
-app = "todo-frontend-k8s"
-primary_region = "ams"
+# fly.toml app configuration file generated for frontend-polished-brook-6642 on 2025-10-04T17:50:31+03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'frontend-polished-brook-6642'
+primary_region = 'fra'
 
 [build]
-
-[env]
-  REACT_APP_API_URL = "https://todo-backend-k8s.fly.dev/api"
 
 [http_service]
   internal_port = 80
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
 [[vm]]
-  cpu_kind = "shared"
+  memory = '1gb'
+  cpu_kind = 'shared'
   cpus = 1
-  memory_mb = 256
