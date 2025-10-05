@@ -9,8 +9,11 @@ A full-stack Todo application demonstrating containerization with Docker, orches
 - **Containerization**: Docker
 - **Orchestration**: Kubernetes
 - **Deployment**: Fly.io
+- 
 
 ## Project Structure
+
+![PHOTO-2025-10-05-01-52-19](https://github.com/user-attachments/assets/016ae2ea-867d-4892-af0a-fb552989a567)
 
 ``
 k8s-todo-app/
