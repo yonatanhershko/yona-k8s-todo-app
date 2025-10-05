@@ -12,7 +12,7 @@ A full-stack Todo application demonstrating containerization with Docker, orches
 - 
 
 ## Project Structure
-![PHOTO-2025-10-05-13-50-12](https://github.com/user-attachments/assets/278a423d-317e-4d5b-93e5-78549f02f66e)
+![PHOTO-2025-10-05-13-53-24](https://github.com/user-attachments/assets/6bca9754-42e0-48b9-9563-257518e81b95)
 
 
 ``
