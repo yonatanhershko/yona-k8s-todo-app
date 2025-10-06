@@ -1,6 +1,7 @@
 # Kubernetes Todo Application
 
 A full-stack Todo application demonstrating containerization with Docker, orchestration with Kubernetes, and deployment on Fly.io.
+You can visit mr in : https://frontend-polished-brook-6642.fly.dev/
 
 ## Tech Stack
 
